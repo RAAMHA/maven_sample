@@ -1,0 +1,41 @@
+name: Maven CI
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - "pom.xml"
+      - "src/**"
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'maven'   # speeds up builds by caching ~/.m2
+
+      - name: Build & test
+        run: mvn -B -ntp clean verify
+        # use this instead if you want to skip tests:
+        # run: mvn -B -ntp clean package -DskipTests
+
+      - name: Upload built artifacts (JAR/WAR)
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts
+          path: |
+            target/*.jar
+            target/*.war
+            !target/*-sources.jar
+            !target/*-javadoc.jar
